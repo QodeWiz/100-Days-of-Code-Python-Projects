@@ -31,15 +31,11 @@ resources = {
     "coffee": 100,
 }
 
-water_report = resources["water"]
-milk_report = resources["milk"]
-coffee_report = resources["coffee"]
 money = 0
-change = 0
-
+order_possible = True
 
 def get_report():
-    print(f"Water: {water_report} \nMilk: {milk_report} \nCoffee: {coffee_report} \nMoney: {money}")
+    print(f"Water: {resources['water']} \nMilk: {resources['milk']} \nCoffee: {resources['coffee']} \nMoney: {money}")
 
 def money_inserted():
     print("Please insert coins")
@@ -51,29 +47,39 @@ def money_inserted():
     money = total
     return money
 
-prompt = input("What would you like? (espresso/latte/cappuccino): ").lower()
+def check_resources(drink):
+    for item, amount in MENU[drink]["ingredients"].items():
+        if resources[item] < amount:
+            print(f"Sorry, there is not enough {item}.")
+            return False
+    return True
 
-def check_prompt(prompt):
-    if prompt == "report":
-        print("testing report")
-        get_report()
-    
-    money = money_inserted()
-    if prompt == "espresso":
-        cost = MENU["espresso"]["cost"]
-        if money > cost:
-            change = money - cost
-            print(f"Here is ${change} in change.\nHere is your {prompt} Enjoy!")
-    elif prompt == "latte":
-        cost = MENU["latte"]["cost"]
-        if money > cost:
-            change = money - cost
-            print(f"money inserted is: {money} and cost is: {cost} and change is {change}")
-    elif prompt == "cappucino":
-        cost = MENU["cappucino"]["cost"]
-        if money > cost:
-            change = money - cost
-            print(f"money inserted is: {money} and cost is: {cost} and change is {change}")
+def update_resources(drink):
+    for item, amount in MENU[drink]["ingredients"].items():
+        resources[item] -= amount
 
 
-check_prompt(prompt)
+while order_possible:
+
+    prompt = input("What would you like? (espresso/latte/cappuccino): ").lower()
+
+    def check_prompt(prompt):
+        global order_possible
+        if prompt == "report":
+            get_report()
+        elif prompt in MENU:
+            if check_resources(prompt):
+                money_received = money_inserted()
+                cost = MENU[prompt]["cost"]
+                if money_received >= cost:
+                    change = round(money_received - cost, 2)
+                    print(f"Here is ${change} in change.\nHere is your {prompt}. Enjoy!")
+                    update_resources(prompt)
+                else:
+                    print("Sorry, that's not enough money. Money refunded.")
+            else:
+                order_possible = False
+        else:
+            print("Invalid choice! Please try again.")
+
+    check_prompt(prompt)
